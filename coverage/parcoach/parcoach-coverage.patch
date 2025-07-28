@@ -1,0 +1,51 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 4b1ee38..560911f 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -47,9 +47,9 @@ add_subdirectory(module)
+ add_subdirectory(src)
+ 
+ if(PARCOACH_ENABLE_TESTS)
+-  enable_testing()
+-  add_subdirectory(tests)
+-  add_subdirectory(unittests)
++  #  enable_testing()
++  # add_subdirectory(tests)
++  # add_subdirectory(unittests)
+ endif()
+ 
+ add_subdirectory(code-quality)
+diff --git a/cmake/Coverage.cmake b/cmake/Coverage.cmake
+index 44f8240..728f1f8 100644
+--- a/cmake/Coverage.cmake
++++ b/cmake/Coverage.cmake
+@@ -1,5 +1,5 @@
+ if(PARCOACH_BUILD_SHARED)
+-  message(FATAL_ERROR
++  message(WARNING
+     "PARCOACH configured with shared libs, but coverage requires to statically "
+     "link the lib into the binary. Turn off shared build by passing "
+     "-DPARCOACH_BUILD_SHARED=OFF to cmake."
+diff --git a/cmake/FindLLVM.cmake b/cmake/FindLLVM.cmake
+index 1c181c2..70cdac0 100644
+--- a/cmake/FindLLVM.cmake
++++ b/cmake/FindLLVM.cmake
+@@ -4,12 +4,12 @@ message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION} in ${LLVM_INSTALL_PREFIX}")
+ message(STATUS "Using LLVM binaries in: ${LLVM_TOOLS_BINARY_DIR}")
+ 
+ set(EXPECTED_COMPILER "Clang ${LLVM_VERSION}")
+-if(NOT "${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}" STREQUAL EXPECTED_COMPILER
+-   OR NOT "${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION}" STREQUAL EXPECTED_COMPILER)
+-  message(FATAL_ERROR "PARCOACH needs Clang shipped with LLVM, and it looks like"
+-         " the detected compiler doesn't match that. Please set the variables "
+-         "CMAKE_C_COMPILER and CMAKE_CXX_COMPILER appropriately.")
+-endif()
++#if(NOT "${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}" STREQUAL EXPECTED_COMPILER
++#   OR NOT "${CMAKE_C_COMPILER_ID} ${CMAKE_C_COMPILER_VERSION}" STREQUAL EXPECTED_COMPILER)
++#  message(FATAL_ERROR "PARCOACH needs Clang shipped with LLVM, and it looks like"
++#         " the detected compiler doesn't match that. Please set the variables "
++#         "CMAKE_C_COMPILER and CMAKE_CXX_COMPILER appropriately.")
++#endif()
+ 
+ if(PARCOACH_ENABLE_FORTRAN AND NOT CMAKE_Fortran_COMPILER_ID STREQUAL "LLVMFlang")
+   message(FATAL_ERROR "PARCOACH needs the flang shipped with LLVM >= 15, "

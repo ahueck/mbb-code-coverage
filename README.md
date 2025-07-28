@@ -49,3 +49,7 @@ Each sub folder contains tests that were developed to cover tool-specific MPI an
 | parcoach-loop-construct-OK.c                                  |                    0 | +0.00%              |                          0 | +0.00%                    |                       71 | +1.14%                  |
 | parcoach-mem-access-OK.c                                      |                    0 | +0.00%              |                          0 | +0.00%                    |                       71 | +1.14%                  |
 | parcoach-switch-OK.c                                          |                    0 | +0.00%              |                          0 | +0.00%                    |                       18 | +0.29%                  |
+
+
+## Coverage Setup Scripts
+In folder [coverage](coverage/), helper scripts to setup the MPI correctness tools for code coverage exist, see the [readme](coverage/README.md).
