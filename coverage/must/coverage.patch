@@ -1,0 +1,213 @@
+diff '--exclude=.git' '--exclude=__pycache__' -ruN MUST-ref/CMakeLists.txt MUST/CMakeLists.txt
+--- MUST-ref/CMakeLists.txt	2025-06-17 09:01:51.160291000 +0200
++++ MUST/CMakeLists.txt	2025-06-10 16:44:54.191895000 +0200
+@@ -360,7 +360,7 @@
+     ADD_SUBDIRECTORY(tests EXCLUDE_FROM_ALL)
+ ENDIF (ENABLE_TESTS)
+ 
+-coverage_evaluate()
++#coverage_evaluate()
+ 
+ # CPack configuration for packaging sources.
+ #
+diff '--exclude=.git' '--exclude=__pycache__' -ruN MUST-ref/externals/GTI/CMakeLists.txt MUST/externals/GTI/CMakeLists.txt
+--- MUST-ref/externals/GTI/CMakeLists.txt	2025-06-17 09:02:09.355108000 +0200
++++ MUST/externals/GTI/CMakeLists.txt	2025-06-16 13:25:52.407384000 +0200
+@@ -304,6 +304,13 @@
+         ${CMAKE_INSTALL_DATAROOTDIR}/cmake/GTI
+ )
+ 
++INSTALL(
++    DIRECTORY
++        externals/PnMPI/externals/CMake-codecov/cmake/
++    DESTINATION
++        ${CMAKE_INSTALL_DATAROOTDIR}/cmake/GTI
++)
++
+ 
+ # Populate cache with GTI configuration.
+ #
+diff '--exclude=.git' '--exclude=__pycache__' -ruN MUST-ref/externals/GTI/externals/PnMPI/externals/CMake-codecov/cmake/Findcodecov.cmake MUST/externals/GTI/externals/PnMPI/externals/CMake-codecov/cmake/Findcodecov.cmake
+--- MUST-ref/externals/GTI/externals/PnMPI/externals/CMake-codecov/cmake/Findcodecov.cmake	2025-06-17 09:02:16.870961000 +0200
++++ MUST/externals/GTI/externals/PnMPI/externals/CMake-codecov/cmake/Findcodecov.cmake	2025-06-11 17:10:21.275904000 +0200
+@@ -12,11 +12,7 @@
+ option(ENABLE_COVERAGE "Enable coverage build." OFF)
+ 
+ set(COVERAGE_FLAG_CANDIDATES
+-	# gcc and clang
+-	"-O0 -g -fprofile-arcs -ftest-coverage"
+-
+-	# gcc and clang fallback
+-	"-O0 -g --coverage"
++	"-fprofile-instr-generate -fcoverage-mapping"
+ )
+ 
+ 
+diff '--exclude=.git' '--exclude=__pycache__' -ruN MUST-ref/externals/GTI/modules/comm-protocols/CStratCrashHandling.cpp MUST/externals/GTI/modules/comm-protocols/CStratCrashHandling.cpp
+--- MUST-ref/externals/GTI/modules/comm-protocols/CStratCrashHandling.cpp	2025-06-17 09:02:09.416743000 +0200
++++ MUST/externals/GTI/modules/comm-protocols/CStratCrashHandling.cpp	2025-06-12 12:53:31.731965000 +0200
+@@ -273,35 +273,35 @@
+         gtiMpiCrashSize,
+         getpid(),
+         signum);
+-    int finalized = 0;
+-    MPI_Finalized(&finalized);
+-    if (signum == SIGINT || signum == SIGKILL) {
+-        print_stack();
+-        if (!static_cast<bool>(finalized)) {
+-            MPI_Abort(MPI_COMM_WORLD, signum + 128);
+-        } else {
+-            _exit(signum + 128);
+-        }
+-    }
+-    if (signum == SIGTERM || signum == SIGUSR2) {
+-        if (doStacktraceOnTerm) {
+-            print_stack();
+-            fflush(stdout);
+-            sleep(1);
+-        }
+-        if (!static_cast<bool>(finalized)) {
+-            MPI_Abort(MPI_COMM_WORLD, signum + 128);
+-        } else {
+-            _exit(signum + 128);
+-        }
+-    }
++    // int finalized = 0;
++    // MPI_Finalized(&finalized);
++    // if (signum == SIGINT || signum == SIGKILL) {
++    //     print_stack();
++    //     if (!static_cast<bool>(finalized)) {
++    //         MPI_Abort(MPI_COMM_WORLD, signum + 128);
++    //     } else {
++    //         _exit(signum + 128);
++    //     }
++    // }
++    // if (signum == SIGTERM || signum == SIGUSR2) {
++    //     if (doStacktraceOnTerm) {
++    //         print_stack();
++    //         fflush(stdout);
++    //         sleep(1);
++    //     }
++    //     if (!static_cast<bool>(finalized)) {
++    //         MPI_Abort(MPI_COMM_WORLD, signum + 128);
++    //     } else {
++    //         _exit(signum + 128);
++    //     }
++    // }
+     print_stack();
+ 
+     notifyPanics();
+ 
+     printf("Waiting up to %i seconds for analyses to be finished.\n", gtiCrashRankSleepTime);
+     sleep(gtiCrashRankSleepTime);
+-    _exit(1);
++    exit(1);
+ }
+ 
+ /**
+diff '--exclude=.git' '--exclude=__pycache__' -ruN MUST-ref/externals/GTI/system-builder/buildgen/BuildGen.cpp MUST/externals/GTI/system-builder/buildgen/BuildGen.cpp
+--- MUST-ref/externals/GTI/system-builder/buildgen/BuildGen.cpp	2025-06-17 09:02:09.482883000 +0200
++++ MUST/externals/GTI/system-builder/buildgen/BuildGen.cpp	2025-06-16 13:51:32.194702000 +0200
+@@ -151,6 +151,10 @@
+                << "INCLUDE (InstallationConfiguration)" << std::endl
+                << "INCLUDE (GTIConfig)" << std::endl
+                << std::endl
++               << "SET(ENABLE_COVERAGE ON)" << std::endl
++               << "FIND_PACKAGE(codecov)" << std::endl
++               << "SET(LCOV_FOUND FALSE)" << std::endl
++               << std::endl
+                << "SET (CMAKE_CXX_STANDARD " << BUILDGEN_CXX_STANDARD << ")" << std::endl
+                << "SET (CMAKE_CXX_STANDARD_REQUIRED TRUE)" << std::endl
+                << "IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)" << std::endl
+@@ -316,7 +320,7 @@
+                << std::endl
+                << "SET (BASE_SOURCES " << myModPath << "/../src/GtiHelper.cpp)" << std::endl
+                << std::endl
+-               << "GTI_MAC_ADD_MODULE_NO_COVERAGE (" << moduleName << " \"" << source << ";";
++               << "GTI_MAC_ADD_MODULE (" << moduleName << " \"" << source << ";";
+ 
+     for (iter = extraSources.begin(); iter != extraSources.end(); iter++) {
+         myBuildOut << *iter << ";";
+diff '--exclude=.git' '--exclude=__pycache__' -ruN MUST-ref/modules/DeadlockDetection/DWaitState/DWaitStateWfgMgr.cpp MUST/modules/DeadlockDetection/DWaitState/DWaitStateWfgMgr.cpp
+--- MUST-ref/modules/DeadlockDetection/DWaitState/DWaitStateWfgMgr.cpp	2025-06-17 09:01:51.245765480 +0200
++++ MUST/modules/DeadlockDetection/DWaitState/DWaitStateWfgMgr.cpp	2025-06-17 09:07:17.202512000 +0200
+@@ -32,6 +32,8 @@
+ 
+ using namespace must;
+ 
++extern "C" int __llvm_profile_write_file(void);
++
+ mGET_INSTANCE_FUNCTION(DWaitStateWfgMgr)
+ mFREE_INSTANCE_FUNCTION(DWaitStateWfgMgr)
+ mPNMPI_REGISTRATIONPOINT_FUNCTION(DWaitStateWfgMgr)
+@@ -1051,6 +1053,8 @@
+      * simpler for the time being.
+      */
+     if (abort) {
++        __llvm_profile_write_file();
++        
+         // Disable signal handler to prevent printing the stack trace (and getting false positive
+         // test reports)
+         std::signal(SIGABRT, SIG_DFL);
+diff '--exclude=.git' '--exclude=__pycache__' -ruN MUST-ref/prebuild/CMakeLists.txt MUST/prebuild/CMakeLists.txt
+--- MUST-ref/prebuild/CMakeLists.txt	2025-06-17 09:01:51.451024000 +0200
++++ MUST/prebuild/CMakeLists.txt	2025-07-08 09:55:05.824247643 +0200
+@@ -86,40 +86,8 @@
+ # 14 7529536 537824
+ # 14 105413504 7529536
+ 
+-
+-# Mode 1
+-MUST_PREBUILD_CONFIGURATION(mode1-layer2 "-np 65534")
+-MUST_PREBUILD_CONFIGURATION(mode1-layer3-hybrid "-np 1022 --must:hybrid")
+-
+-# Mode 2
+-MUST_PREBUILD_CONFIGURATION(mode2-layer3 "-np 1044484 --must:nodesize 1023 --must:mpimode SPMD")
+-
+-# Mode 3
+-MUST_PREBUILD_CONFIGURATION(mode3-layer2 "-np 65534 --must:nocrash")
+-
+-# Mode 4
+-MUST_PREBUILD_CONFIGURATION(mode4-layer3 "-np 1044484 --must:nodesize 1023 --must:mpimode SPMD --must:fanin 1022")
+-#MUST_PREBUILD_CONFIGURATION(mode4-layer3-hybrid "-np 1022 --must:nodesize 1023 --must:fanin 1022 --must:hybrid")
+-
+-# Mode 5
+-MUST_PREBUILD_CONFIGURATION(mode5-layer3 "-np 1044484 --must:fanin 1022")
+-MUST_PREBUILD_CONFIGURATION(mode5-layer3-hybrid "-np 1022 --must:fanin 1022 --must:hybrid")
+-
+-IF (NOT REDUCED_PREBUILDS)
+-# Mode 4
+-    MUST_PREBUILD_CONFIGURATION(mode4-layer4 "-np 16387064 --must:nodesize 255 --must:mpimode SPMD --must:fanin 254")
+-    MUST_PREBUILD_CONFIGURATION(mode4-layer5 "-np 14776336 --must:nodesize 63 --must:mpimode SPMD --must:fanin 62")
+-    MUST_PREBUILD_CONFIGURATION(mode4-layer6 "-np 24300000 --must:nodesize 31 --must:mpimode SPMD --must:fanin 30")
+-    MUST_PREBUILD_CONFIGURATION(mode4-layer7 "-np 7529536 --must:nodesize 15 --must:mpimode SPMD --must:fanin 14")
+-
+-# Mode 5
+-    MUST_PREBUILD_CONFIGURATION(mode5-layer4 "-np 16387064 --must:fanin 254")
+-    MUST_PREBUILD_CONFIGURATION(mode5-layer5 "-np 14776336 --must:fanin 62")
+-    MUST_PREBUILD_CONFIGURATION(mode5-layer6 "-np 24300000 --must:fanin 30")
+-    MUST_PREBUILD_CONFIGURATION(mode5-layer7 "-np 7529536 --must:fanin 14")
+-    MUST_PREBUILD_CONFIGURATION(mode5-layer8 "-np 105413504 --must:fanin 14")
+-    MUST_PREBUILD_CONFIGURATION(mode5-layer4-hybrid "-np 64516 --must:fanin 254 --must:hybrid")
+-    MUST_PREBUILD_CONFIGURATION(mode5-layer5-hybrid "-np 238328 --must:fanin 62 --must:hybrid")
+-    MUST_PREBUILD_CONFIGURATION(mode5-layer6-hybrid "-np 810000 --must:fanin 30 --must:hybrid")
+-
+-ENDIF ()
++# Coverage modes
++MUST_PREBUILD_CONFIGURATION(must-coverage-distributed-dl "-np 2 --must:distributed --must:typeart")
++MUST_PREBUILD_CONFIGURATION(must-coverage-centralized-dl "-np 65534 --must:typeart")
++MUST_PREBUILD_CONFIGURATION(must-coverage-tsan "-np 65534 --must:tsan")
++MUST_PREBUILD_CONFIGURATION(must-coverage-rmarace "-np 65534 --must:rma-race")
+\ No newline at end of file
+diff '--exclude=.git' '--exclude=__pycache__' -ruN MUST-ref/tests/lit.cfg MUST/tests/lit.cfg
+--- MUST-ref/tests/lit.cfg	2025-06-17 09:01:52.232399000 +0200
++++ MUST/tests/lit.cfg	2025-06-12 15:37:43.914407000 +0200
+@@ -117,6 +117,8 @@
+     ("MUST_TEMP", "%t/must_temp"),
+     ("MUST_USER_CACHE_DIR", config.testdir + "/cache"),
+     ("MUST_ERRORCODE", "0"),
++    ("LLVM_PROFILE_FILE", "/w0/tmp/ss540294/must_coverage/%basename_t/%basename_t.%%p.profraw"),
++    #config.project_obj_root+ 
+ ]
+ # --must:clean is controlled by CMake cache variables
+ if not config.disable_must_clean:
